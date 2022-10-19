@@ -13,8 +13,8 @@
 #include<chrono>
 
 //Variables de la ventana
-int WIDTH =512;
-int HEIGHT = 512;
+int WIDTH =1024;
+int HEIGHT = 1024;
 
 //////////////////////////////////////////////////////////////
 // Variables que nos dan acceso a Objetos OpenGL
@@ -39,17 +39,14 @@ unsigned int vao;
 //VBOs que forman parte del objeto 
 unsigned int posVBO;
 
-unsigned int upos;
-unsigned int uvel;
+unsigned int uenergy;
+float energy = 0.24f;
+float energydiff = 0.01f;
 unsigned int usize;
+
 
 glm::ivec2 wgs = glm::ivec2(32);
 glm::ivec2 size;
-
-float totaltime = 0;
-int countframes = 0;
-
-unsigned int uproj;
 
 //////////////////////////////////////////////////////////////
 // Funciones auxiliares
@@ -80,11 +77,13 @@ GLuint loadShader(const char *fileName, GLenum type);
 //y devuelve el identificador de la textura 
 unsigned int loadTex(const char *fileName);
 
-bool saving = true; 
 
 int main(int argc, char** argv)
 {
 	//std::locale::global(std::locale("spanish"));// acentos ;)
+
+		printf("Input the initial, and the step of the energy of the particles:\n");
+		scanf("%f %f", &energy, &energydiff);	
 
 	initContext(argc, argv);
 	initOGL();
@@ -124,10 +123,6 @@ void initContext(int argc, char** argv){
 		std::cout << "Error: " << glewGetErrorString(err) << std::endl; 
 		exit(-1); 
 	} 
-
-	// Comprobamos la version de OpenGL
-	const GLubyte* oglVersion = glGetString(GL_VERSION);  
-	std::cout << "This system supports OpenGL Version: " << oglVersion << std::endl;
 
 	// Le indicamos a Glut que funciones hay que ejecutar cuando se dan ciertos eventos
 	glutReshapeFunc(resizeFunc);		// redimension de la ventana
@@ -226,6 +221,7 @@ void initShader2(const char* name) {
 	}
 	ucolcom = glGetUniformLocation(program2, "color");
 	usize= glGetUniformLocation(program2, "size");
+	uenergy= glGetUniformLocation(program2, "energy");
 }
 
 void initObj()
@@ -339,6 +335,8 @@ void renderFunc()
 	glUniform1i(ucolcom, 0);
 	if(usize!=-1)
 		glUniform2iv(usize, 1,&size[0]);
+	if (uenergy != -1)
+		glUniform1f(uenergy, energy);
 
 	auto start0 = std::chrono::system_clock::now();
 	// Se lanzan los compute shaders
@@ -361,19 +359,20 @@ void renderFunc()
 
 	auto end1 = std::chrono::system_clock::now();
 
-	if (saving)
-		saveimage(WIDTH, HEIGHT);
+	
 
 	glutSwapBuffers();
 
+
+	std::cout << "Energy: " << energy << std::endl;
+
 	// Se calculan los tiempos de renderizado y computo y el numero de frames por segundo
-	std::chrono::duration<float, std::milli> duration1 = end1 - start1;
+	/*std::chrono::duration<float, std::milli> duration1 = end1 - start1;
 	std::chrono::duration<float, std::milli> duration0 = end0 - start0;
-	totaltime += duration1.count()+duration0.count();
-	countframes++;
+	float totaltime = duration1.count()+duration0.count();
 	std::cout << duration0.count() << " s compute" << std::endl;
 	std::cout << duration1.count() << " s render" << std::endl;
-	std::cout << countframes / totaltime << " mean total FPS " << std::endl;
+	std::cout << 1. / totaltime << " mean total FPS " << std::endl;*/
 
 }
 
@@ -397,12 +396,20 @@ void resizeFunc(int width, int height)
 
 void idleFunc()
 {
-	//glutPostRedisplay();
+	
 }
 
 void keyboardFunc(unsigned char key, int x, int y){
 
-	
+
+	if (key == 's' || key == 'S') {
+		saveimage(WIDTH, HEIGHT);
+	}
+	else if (key == 'a' || key=='A') {
+		energy += energydiff;
+		glutPostRedisplay();
+	}
+
 }
 
 void mouseFunc(int button, int state, int x, int y){
