@@ -16,6 +16,12 @@ For more information about this system and the importance of its escape basin se
 - You can choose the energy and the energy step of the animation in the console input.
 - The parameter of the solver can be change too in the shader: the step, "h", and the maximum iteration, "maxsteps".
 
+## Installation
+
+Build with CMake and move the bin dlls to the same folder as the compiled executable. 
+
+You may have to move the shaders folder to the parent folder of the executable.
+
 ## Requeriments
 
 This project needs glm, glew, glut and freeimage. The headers, libs and dlls for win32 are included in this repository.
